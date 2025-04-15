@@ -1,13 +1,16 @@
 import os
 import json
-from http.client import responses
+import time
+from turtledemo.penrose import start
 
 from dotenv import load_dotenv
 from requests import HTTPError
+import requests
+
 
 load_dotenv()
 
-import requests
+
 
 
 class YC:
@@ -20,6 +23,7 @@ class YC:
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.iam_token}"
         }
+        self.instance_id = []
 
 
 
@@ -38,7 +42,6 @@ class YC:
             if response.status_code == 200:
                 iam_token = response_data.get("iamToken")
 
-                print(iam_token)
                 return iam_token
 
             else:
@@ -87,7 +90,7 @@ class YC:
         try:
             response = requests.get(url, headers=self.headers, params=params)
             response_data = response.json()
-            print(response_data)
+
             if response.status_code == 200:
                 folders_id = response_data['folders'][0]['id']
                 return folders_id
@@ -106,7 +109,6 @@ class YC:
 
             if response.status_code == 200:
                 zones_id = response_data['zones'][0]['id']
-
                 return zones_id
 
             else:
@@ -135,18 +137,38 @@ class YC:
     def image_list(self):
         url = "https://compute.api.cloud.yandex.net/compute/v1/images"
         params = {
-            "folderId": "standard-images"
-            "filter":
+            "folderId": "standard-images",
+            "filter": "name='ubuntu-24-04-lts-v20250106'",
+            "pageSize": "100"
         }
-        print(params)
+
         try:
             response = requests.get(url, headers=self.headers, params=params)
             response_data = response.json()
-            print(response_data)
-            if response.status_code == 200:
-                # image_list = response_data['images'][0]['id']
 
-                return
+            if response.status_code == 200:
+                image_list = response_data['images'][0]['id']
+                return image_list
+
+            else:
+                print(f"Ошибка HTTP: {response.status_code}. Message: {response_data.get('message')}")
+        except HTTPError as htt_err:
+            print(f"Ошибка: {htt_err}")
+
+    # Список ресурсов подсети
+    def subnet_list(self):
+        url = "https://vpc.api.cloud.yandex.net/vpc/v1/subnets"
+        params = {
+            "folderId": f"{self.folder_list()}"
+        }
+        try:
+            response = requests.get(url, headers=self.headers, params=params)
+            response_data = response.json()
+
+            if response.status_code == 200:
+                for subnet in response_data.get('subnets', []):
+                    if subnet['zoneId'] == f'{self.zone_list()}':
+                        return subnet['id']
 
             else:
                 print(f"Ошибка HTTP: {response.status_code}. Message: {response_data.get('message')}")
@@ -169,23 +191,68 @@ class YC:
             "bootDiskSpec": {
                 "diskSpec": {
                     "size": "21474836480",
-                    "imageId": "fd87va5cc00gaq2f5qfb",
+                    "imageId": f"{self.image_list()}",
                     "typeId": f"{self.disk_type_list()}"
                 }
             },
+            "networkInterfaceSpecs": [
+                {
+                    "subnetId": f"{self.subnet_list()}",
+                    "primaryV4AddressSpec": {
+                        "oneToOneNatSpec": {
+                            "ipVersion": "IPV4"
+                        }
+                    }
+
+                }
+
+
+            ]
         }
+        try:
+            response = requests.post(url, headers=self.headers, data=json.dumps(data))
+            response_data = response.json()
+            print(response_data)
+            if response.status_code == 200:
+                self.instance_id = response_data['metadata']['instanceId']
+                return self.instance_id
 
-        response = requests.post(url, headers=self.headers, data=json.dumps(data))
-        data = response.json()
-        print(data)
+            else:
+                print(f"Ошибка HTTP: {response.status_code}. Message: {response_data.get('message')}")
+        except HTTPError as htt_err:
+            print(f"Ошибка: {htt_err}")
 
+    def instance_get(self, timeout=600, interval=5):
+        url = f"https://compute.api.cloud.yandex.net/compute/v1/instances/{self.instance_id}"
+        start_time = time.time()
 
+        try:
+            while time.time() - start_time < timeout:
+                response = requests.get(url, headers=self.headers)
+                response_data = response.json()
+
+                if response.status_code == 200:
+                    status = response_data['status']
+
+                    if status == 'RUNNING':
+                        print(f"Статус сервера:{status}")
+                        return status
+
+                    elif status == 'ERROR':
+                        print(f"Статус сервера:{status}")
+                        return status
+
+                    time.sleep(interval)
+
+                else:
+                    print(f"Ошибка HTTP: {response.status_code}. Message: {response_data.get('message')}")
+        except HTTPError as htt_err:
+            print(f"Ошибка: {htt_err}")
 
 
 if __name__ == "__main__":
     test = YC()
-    test.image_list()
-
-    # test.add_instance()
+    test.add_instance()
+    test.instance_get()
 
     test.revoke_token()
