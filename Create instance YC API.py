@@ -1,7 +1,8 @@
 import os
 import json
 import time
-from turtledemo.penrose import start
+from time import sleep
+import subprocess
 
 from dotenv import load_dotenv
 from requests import HTTPError
@@ -205,24 +206,26 @@ class YC:
                     }
 
                 }
-
-
-            ]
+            ],
+            "metadata": {
+                "ssh-keys": os.getenv("ssh-key")
+            }
         }
         try:
             response = requests.post(url, headers=self.headers, data=json.dumps(data))
             response_data = response.json()
-            print(response_data)
+
             if response.status_code == 200:
                 self.instance_id = response_data['metadata']['instanceId']
-                return self.instance_id
+                return self.instance_get(target_status='RUNNING')
 
             else:
                 print(f"Ошибка HTTP: {response.status_code}. Message: {response_data.get('message')}")
         except HTTPError as htt_err:
             print(f"Ошибка: {htt_err}")
 
-    def instance_get(self, timeout=600, interval=5):
+    # Ожидание статуса развертывания инстанса
+    def instance_get(self, timeout=600, interval=5, target_status=None):
         url = f"https://compute.api.cloud.yandex.net/compute/v1/instances/{self.instance_id}"
         start_time = time.time()
 
@@ -230,16 +233,17 @@ class YC:
             while time.time() - start_time < timeout:
                 response = requests.get(url, headers=self.headers)
                 response_data = response.json()
+                print(response_data)
 
                 if response.status_code == 200:
                     status = response_data['status']
 
-                    if status == 'RUNNING':
-                        print(f"Статус сервера:{status}")
+                    if target_status is None or status == target_status:
+                        print(f"Статус сервера: {status}")
                         return status
 
                     elif status == 'ERROR':
-                        print(f"Статус сервера:{status}")
+                        print(f"Статус сервера: {status}")
                         return status
 
                     time.sleep(interval)
@@ -249,10 +253,129 @@ class YC:
         except HTTPError as htt_err:
             print(f"Ошибка: {htt_err}")
 
+    # Остановка инстанса
+    def instance_stop(self):
+        url = f"https://compute.api.cloud.yandex.net/compute/v1/instances/{self.instance_id}:stop"
+
+        try:
+            response = requests.post(url, headers=self.headers)
+            response_data = response.json()
+
+            if response.status_code == 200:
+                return self.instance_get(target_status='STOPPED')
+
+            else:
+                print(f"Ошибка HTTP: {response.status_code}. Message: {response_data.get('message')}")
+        except HTTPError as htt_err:
+            print(f"Ошибка: {htt_err}")
+
+    # Обновления параметров для инстанса
+    def instance_update(self):
+
+        self.instance_stop()
+        sleep(10)
+
+        url = f"https://compute.api.cloud.yandex.net/compute/v1/instances/{self.instance_id}"
+        data = {
+            "updateMask": "labels",
+            # "name": "test1",
+            "labels": {
+                "environment": "prod"
+            },
+
+            # "metadata": {
+            #     "ssh-keys": os.getenv("ssh-key")
+            # }
+
+        }
+
+        try:
+            response = requests.patch(url, headers=self.headers, json=data)
+            response_data = response.json()
+            print("instance_update", response_data)
+
+            if response.status_code == 200:
+                return self.update_metadata()
+
+            else:
+                print(f"Ошибка HTTP: {response.status_code}. Message: {response_data.get('message')}")
+        except HTTPError as htt_err:
+            print(f"Ошибка: {htt_err}")
+
+    # def update_network_interface(self):
+    #     url = f"https://compute.api.cloud.yandex.net/compute/v1/instances/{self.instance_id}/updateNetworkInterface"
+    #     data: {
+    #
+    #     }
+
+    def update_metadata(self):
+        url = f"https://compute.api.cloud.yandex.net/compute/v1/instances/{self.instance_id}/updateMetadata"
+        data = {
+            "metadata": {
+                "ssh-keys": os.getenv("ssh-key")
+            },
+            "updateMask": "ssh-keys"
+        }
+
+        try:
+            response = requests.post(url, headers=self.headers, json=data)
+            response_data = response.json()
+            print("instance_update", response_data)
+
+            if response.status_code == 200:
+                return self.instance_start()
+
+            else:
+                print(f"Ошибка HTTP: {response.status_code}. Message: {response_data.get('message')}")
+        except HTTPError as htt_err:
+            print(f"Ошибка: {htt_err}")
+
+
+    # Старт инстанса
+    def instance_start(self):
+        url = f"https://compute.api.cloud.yandex.net/compute/v1/instances/{self.instance_id}:start"
+
+        try:
+            response = requests.post(url, headers=self.headers)
+            response_data = response.json()
+            print("instance_start", response_data)
+
+            if response.status_code == 200:
+                return self.instance_get(target_status='RUNNING')
+
+            else:
+                print(f"Ошибка HTTP: {response.status_code}. Message: {response_data.get('message')}")
+        except HTTPError as htt_err:
+            print(f"Ошибка: {htt_err}")
+
+    # Установка nginx
+    def install_nginx(self):
+        commands = [
+            'sudo apt update',
+            'sudo apt install -y nginx',
+            'sudo systemctl start nginx',
+            'sudo systemctl enable nginx',
+            'echo "Nginx установлен"'
+        ]
+
+        remote_commands_str = ";".join(commands)
+        try:
+            subprocess.run([
+                'ssh',
+                '-i', os.getenv("key_path"),
+                '-o', 'StrictHostKeyChecking=no',
+                f'ubuntu@84.201.174.153',
+                remote_commands_str
+            ], check=True)
+            print("Nginx успешно установлен!")
+        except subprocess.CalledProcessError as e:
+            print(f"Ошибка: {e}")
+
 
 if __name__ == "__main__":
     test = YC()
     test.add_instance()
-    test.instance_get()
+    test.instance_update()
+    # test.install_nginx()
 
     test.revoke_token()
