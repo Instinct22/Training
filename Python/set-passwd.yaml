@@ -1,0 +1,3 @@
+#cloud-config
+bootcmd:
+  - [sh, -xc, "sudo echo ubuntu:123456 | chpasswd"]
