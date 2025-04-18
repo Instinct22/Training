@@ -225,6 +225,24 @@ class YC:
         except HTTPError as htt_err:
             print(f"Ошибка: {htt_err}")
 
+    # Функция для мета информации
+    def get_instance_info(self):
+        url = f"https://compute.api.cloud.yandex.net/compute/v1/instances/{self.instance_id}"
+
+        try:
+            response = requests.get(url, headers=self.headers)
+            response_data = response.json()
+
+            if response.status_code == 200:
+                self.address = response_data['networkInterfaces'][0]['primaryV4Address']['oneToOneNat']['address']
+
+                return self.address
+
+            else:
+                print(f"Ошибка HTTP: {response.status_code}. Message: {response_data.get('message')}")
+        except HTTPError as htt_err:
+            print(f"Ошибка: {htt_err}")
+
     # Ожидание статуса развертывания инстанса
     def instance_get(self, timeout=600, interval=5, target_status=None):
         url = f"https://compute.api.cloud.yandex.net/compute/v1/instances/{self.instance_id}"
@@ -240,10 +258,8 @@ class YC:
                     status = response_data['status']
 
                     if target_status is None or status == target_status:
-                        self.address = response_data['networkInterfaces'][0]['primaryV4Address']['oneToOneNat']['address']
-                        print("address", self.address)
                         print(f"Статус сервера: {status}")
-                        return status, self.address
+                        return status
 
                     elif status == 'ERROR':
                         print(f"Статус сервера: {status}")
@@ -285,43 +301,10 @@ class YC:
             "labels": {
                 "environment": "prod"
             },
-
-            # "metadata": {
-            #     "ssh-keys": os.getenv("ssh-key")
-            # }
-
         }
 
         try:
             response = requests.patch(url, headers=self.headers, json=data)
-            response_data = response.json()
-            print("instance_update", response_data)
-
-            if response.status_code == 200:
-                return self.update_metadata()
-
-            else:
-                print(f"Ошибка HTTP: {response.status_code}. Message: {response_data.get('message')}")
-        except HTTPError as htt_err:
-            print(f"Ошибка: {htt_err}")
-
-    # def update_network_interface(self):
-    #     url = f"https://compute.api.cloud.yandex.net/compute/v1/instances/{self.instance_id}/updateNetworkInterface"
-    #     data: {
-    #
-    #     }
-
-    def update_metadata(self):
-        url = f"https://compute.api.cloud.yandex.net/compute/v1/instances/{self.instance_id}/updateMetadata"
-        data = {
-            "metadata": {
-                "ssh-keys": os.getenv("ssh-key")
-            },
-            "updateMask": "ssh-keys"
-        }
-
-        try:
-            response = requests.post(url, headers=self.headers, json=data)
             response_data = response.json()
             print("instance_update", response_data)
 
@@ -332,7 +315,6 @@ class YC:
                 print(f"Ошибка HTTP: {response.status_code}. Message: {response_data.get('message')}")
         except HTTPError as htt_err:
             print(f"Ошибка: {htt_err}")
-
 
     # Старт инстанса
     def instance_start(self):
@@ -367,7 +349,7 @@ class YC:
                 'ssh',
                 '-i', os.getenv("key_path"),
                 '-o', 'StrictHostKeyChecking=no',
-                f'ubuntu@{self.address}',
+                f'ubuntu@{self.get_instance_info}',
                 remote_commands_str
             ], check=True)
         except subprocess.CalledProcessError as e:
@@ -377,8 +359,8 @@ class YC:
 if __name__ == "__main__":
     test = YC()
     test.add_instance()
-    # test.install_nginx()
-    test.instance_update()
-    # test.install_nginx()
+    test.install_nginx()
+    # test.instance_update()
+
 
     test.revoke_token()
