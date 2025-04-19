@@ -1,17 +1,4 @@
 
-
-Чтоб сделать импорт нашего инстанса. Необходимо: 
-1. В файле default.tf удалить все в resource "yandex_compute_instance" "imported_vm (можете назвать как вам удобно)". 
-2. Дальше производим инициализацию terraform init (Производим инициализацию рабочей директории).
-3. Производим импорт. terraform import yandex_compute_instance.imported_vm (Либо ваше название в default.tf) (имя инстанса. Его можно получить в UI вашего клауда, либо выполнить команду yc compute instance list в CLI. Тут вы получите весь список ваших инстансов). Пример команды - terraform import yandex_compute_instance.imported_vm fhms6d5rvcpdn7rghr2u
-4. Дальше нам необходимо перенести конфигурацию в default.tf. В этом нам поможет команда terraform show > imported_vm.txt
-5. Когда получили imported_vm.txt, начинаем перегонять настройки в default.tf секцию resource "yandex_compute_instance" "imported_vm. За пример можно взять default.tf который сейчас есть.
-
-
-
-
-
-
 ## Python
 
 Для запуска Python-скрипта:
