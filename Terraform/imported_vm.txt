@@ -1,0 +1,75 @@
+# yandex_compute_instance.imported_vm:
+resource "yandex_compute_instance" "imported_vm" {
+    created_at                = "2025-04-18T08:43:09Z"
+    folder_id                 = "b1gl60eill48p84ucl9p"
+    fqdn                      = "fhmorml1bs9iqp4ro7aq.auto.internal"
+    hardware_generation       = [
+        {
+            generation2_features = []
+            legacy_features      = [
+                {
+                    pci_topology = "PCI_TOPOLOGY_V1"
+                },
+            ]
+        },
+    ]
+    id                        = "fhmorml1bs9iqp4ro7aq"
+    labels                    = {}
+    metadata                  = {
+        "ssh-keys" = "ubuntu:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/OpnfHNcSjEPDFdSRBJyj1YCBG59jeOchsRelZtLlaaK8Q/kZrTX/RnYrWAk4gBC2IL2IcDjI8UYv+K/nyGKU6e5oZEXQF1wTl3fBUYpcwE9vRLCNdXqtQd0K4eoFcVFivZFi5iEYukhkRqrNj1PmUc9Vr2dvO4vvBQoEE81FGyZ/dKjZvuFOAXajRJZb3yNvcIXPPgKlnQT5pwfr+HEAWDAzDFeX8xZlBfcG6i95YLrMKbHv4F66n61VwDw1+lXAzCUELFNWc0HfVg1LcQv4v4692fWtmIvF7bm2vTq9MWp2h9FczI4Zxu6hr9ppWG7dyMo37lKvYBwYN0X2Gt3DCOfIku5csBA+Z0LfAzccMMdWfyaNaw4OeU3YXrNGeKUTHbR1m0HmEHzJnD0p+sVUQiqxOkjTKeVuP1hBCjyRxtWF6nqD8JdUiIZUZbeZ4GJ5xRdkq100LqYHBZD7guAh62kpGtGMZ7TeLCOh+lUaeH05xld9gSS6dgvInb5MO10= instinct@HOME-PC"
+    }
+    network_acceleration_type = "standard"
+    platform_id               = "standard-v3"
+    status                    = "running"
+    zone                      = "ru-central1-a"
+
+    boot_disk {
+        auto_delete = false
+        device_name = "fhml9hv2c2hoom9o4a52"
+        disk_id     = "fhml9hv2c2hoom9o4a52"
+        mode        = "READ_WRITE"
+
+        initialize_params {
+            block_size = 4096
+            image_id   = "fd833ivvmqp6cuq7shpc"
+            size       = 20
+            type       = "network-hdd"
+        }
+    }
+
+    metadata_options {
+        aws_v1_http_endpoint = 1
+        aws_v1_http_token    = 2
+        gce_http_endpoint    = 1
+        gce_http_token       = 1
+    }
+
+    network_interface {
+        index              = 0
+        ip_address         = "10.128.0.7"
+        ipv4               = true
+        ipv6               = false
+        mac_address        = "d0:0d:18:dd:aa:15"
+        nat                = true
+        nat_ip_address     = "158.160.111.160"
+        nat_ip_version     = "IPV4"
+        security_group_ids = []
+        subnet_id          = "e9bvjiqsthlru4mfq152"
+    }
+
+    placement_policy {
+        host_affinity_rules       = []
+        placement_group_partition = 0
+    }
+
+    resources {
+        core_fraction = 20
+        cores         = 2
+        gpus          = 0
+        memory        = 2
+    }
+
+    scheduling_policy {
+        preemptible = false
+    }
+}
