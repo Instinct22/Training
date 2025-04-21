@@ -1,0 +1,57 @@
+---
+- name: Remove nginx
+  hosts: nginx
+  become: true
+
+  tasks:
+    - name: facts
+      ansible.builtin.service_facts:
+
+    - name: Stop service
+      service:
+        name: nginx
+        state: stopped
+        enabled: no
+      when:
+        - "'nginx.service' in ansible_facts.services"
+        - "ansible_facts.services['nginx.service'].state == 'running'"
+
+    - name: remove service nginx
+      apt:
+        name: nginx
+        state: absent
+        purge: yes
+      when:
+        - "'nginx.service' in ansible_facts.services"
+
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: yes
+
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+      when:
+        - "'docker.service' not in ansible_facts.services"
+
+    - name: start service docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+      when:
+        - "'docker.service' in ansible_facts.services"
+        - "ansible_facts.services['docker.service'].state == 'running'"
+
+    - name: install nginx container
+      community.docker.docker_container:
+        name: nginx
+        image: nginx:latest
+        state: started
+        restart_policy: always
+        ports:
+          - "80:80"
+
+
