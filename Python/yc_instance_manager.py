@@ -101,8 +101,6 @@ class yc_manager(yc_control):
     def install_nginx(self):
         self.check_ssh_port()
 
-        sshpass_path = r'C:\Users\Instinct\Downloads\sshpass.exe'
-
         commands = [
             'sudo apt update',
             'sudo apt install -y nginx',
@@ -114,15 +112,14 @@ class yc_manager(yc_control):
 
         try:
             subprocess.run([
-                sshpass_path,
-                '-p', os.getenv("remote_pass"),
                 'ssh',
+                '-i', os.getenv("key_path"),
                 '-o', 'StrictHostKeyChecking=no',
                 f'{os.getenv("remote_user")}@{self.get_instance_info()}',
                 remote_commands_str
             ], check=True)
         except subprocess.CalledProcessError as e:
-            print(f"Ошибка при подключении или установке: {e}")
+            print(f"Ошибка: {e}")
 
 
 

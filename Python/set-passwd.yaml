@@ -15,6 +15,8 @@ users:
     shell: /bin/bash
     groups: sudo
     sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/OpnfHNcSjEPDFdSRBJyj1YCBG59jeOchsRelZtLlaaK8Q/kZrTX/RnYrWAk4gBC2IL2IcDjI8UYv+K/nyGKU6e5oZEXQF1wTl3fBUYpcwE9vRLCNdXqtQd0K4eoFcVFivZFi5iEYukhkRqrNj1PmUc9Vr2dvO4vvBQoEE81FGyZ/dKjZvuFOAXajRJZb3yNvcIXPPgKlnQT5pwfr+HEAWDAzDFeX8xZlBfcG6i95YLrMKbHv4F66n61VwDw1+lXAzCUELFNWc0HfVg1LcQv4v4692fWtmIvF7bm2vTq9MWp2h9FczI4Zxu6hr9ppWG7dyMo37lKvYBwYN0X2Gt3DCOfIku5csBA+Z0LfAzccMMdWfyaNaw4OeU3YXrNGeKUTHbR1m0HmEHzJnD0p+sVUQiqxOkjTKeVuP1hBCjyRxtWF6nqD8JdUiIZUZbeZ4GJ5xRdkq100LqYHBZD7guAh62kpGtGMZ7TeLCOh+lUaeH05xld9gSS6dgvInb5MO10= instinct@HOME-PC
   - name: devuser
     shell: /bin/bash
     groups: sudo

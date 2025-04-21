@@ -14,7 +14,7 @@ KEY_PATH=путь_до_приватного_ssh_ключа
 
 - **OAUTH** — получить токен можно по [ссылке](https://oauth.yandex.ru/authorize?response_type=token&client_id=1a6990aa636648e9b2ef855fa7bec2fb)
 - **remote_user** — ваш логин при создании в cloud-init (например, `ubuntu`)
-- **remote_pass** — ваш пароль при создании в cloud-init (например, `123456`)
+- **key_path** — путь до вашего закрытого ключа
 
 После этого можно запускать скрипт.
 
