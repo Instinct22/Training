@@ -8,7 +8,7 @@
 
 ```
 OAUTH=ваш_oauth_токен
-SSH_KEY=ваш_публичный_ssh_ключ
+remote_user=ваш логин при создании в cloud-init
 KEY_PATH=путь_до_приватного_ssh_ключа
 ```
 
