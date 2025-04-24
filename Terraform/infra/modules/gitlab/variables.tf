@@ -1,0 +1,10 @@
+variable "folder_id" {}
+variable "cloud_id" {}
+variable "subnet_id" {}
+variable "image_id" {}
+variable "block_size" {}
+variable "size" {}
+variable "type" {}
+variable "zone" {}
+variable "platform_id" {}
+variable "service_account_key_file" {}

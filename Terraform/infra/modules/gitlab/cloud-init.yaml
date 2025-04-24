@@ -1,0 +1,24 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+runcmd:
+  - apt update
+  - apt install -y docker.io docker-compose
+  - |
+    docker run --detach \
+      --hostname gitlab.example.com \
+      --publish 443:443 --publish 80:80 --publish 2424:22 \
+      --name gitlab \
+      --restart always \
+      --volume /srv/gitlab/config:/etc/gitlab \
+      --volume /srv/gitlab/logs:/var/log/gitlab \
+      --volume /srv/gitlab/data:/var/opt/gitlab \
+      gitlab/gitlab-ee:latest
+
+users:
+  - name: ubuntu
+    shell: /bin/bash
+    groups: sudo
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH5zNK2HphCI6//dP3TrxJeAhdbooZ2MdQnxaoWbnOmh root@kali
